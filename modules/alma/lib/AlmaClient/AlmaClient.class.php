@@ -56,7 +56,12 @@ class AlmaClient {
     $start_time = explode(' ', microtime());
     // For use with a non-Drupal-system, we should have a way to swap
     // the HTTP client out.
-    $request = drupal_http_request(url($this->base_url . $method, array('query' => $params)), array('secure_socket_transport' => 'sslv3'));
+    // AGMS FIX THAT REQUEST GETS A TIMOUT WHEN USER HAS MANY LOANS
+    $options = array(
+      'timeout' => 60,
+      'headers' => array('secure_socket_transport' => 'sslv3'),
+    );
+    $request = drupal_http_request(url($this->base_url . $method, array('query' => $params)), $options);
     $stop_time = explode(' ', microtime());
     // For use with a non-Drupal-system, we should have a way to swap
     // logging and logging preferences out.
