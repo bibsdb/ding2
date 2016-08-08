@@ -17,5 +17,5 @@ projects[drupal][patch][] = http://drupal.org/files/issues/1116326-overlay-metho
 ; Get the profile, which will contain the next makefile.
 projects[ding2][type] = "profile"
 projects[ding2][download][type] = "git"
-projects[ding2][download][url] = "git@github.com:ding2/ding2.git"
-projects[ding2][download][branch] = "master"
+projects[ding2][download][url] = "git@github.com:bibsdb/ding2.git"
+projects[ding2][download][branch] = "bibsdb-7.x-2.5.1"
