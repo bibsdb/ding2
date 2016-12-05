@@ -1028,6 +1028,11 @@ function _ting_fetch_well_sources() {
     $sources[drupal_strtolower($term)] = $count;
   }
 
+  // Bibsdb addition. Lokalbibliografi needs to be reservable even though it is not part of main search.
+  if (!empty($sources)) {
+    $sources["lokalbibliografi"] = 2763;
+  }
+
   // Only save if we actually got any types.
   if (!empty($sources)) {
     variable_set('ting_well_sources', $sources);
