@@ -71,7 +71,15 @@ class AlmaClient {
     $start_time = explode(' ', microtime());
     // For use with a non-Drupal-system, we should have a way to swap
     // the HTTP client out.
-    $request = drupal_http_request(url($this->base_url . $method, array('query' => $params)), array('secure_socket_transport' => $this->ssl_version));
+    
+    // AGMS FIX THAT REQUEST GETS A TIMOUT WHEN USER HAS MANY LOANS
+    $options = array(
+      'timeout' => 60,
+      'headers' => array('secure_socket_transport' => $this->ssl_version),
+      );
+    $request = drupal_http_request(url($this->base_url . $method, array('query' => $params)), $options);
+
+    
     $stop_time = explode(' ', microtime());
     // For use with a non-Drupal-system, we should have a way to swap
     // logging and logging preferences out.
@@ -102,21 +110,21 @@ class AlmaClient {
         switch ($message) {
           case '':
           case 'borrCardNotFound':
-            throw new AlmaClientBorrCardNotFound('Invalid borrower credentials');
+          throw new AlmaClientBorrCardNotFound('Invalid borrower credentials');
 
           case 'reservationNotFound':
-            throw new AlmaClientReservationNotFound('Reservation not found');
+          throw new AlmaClientReservationNotFound('Reservation not found');
 
           case 'invalidPatron':
-            if ($method == 'patron/selfReg') {
-              throw new AlmaClientUserAlreadyExistsError();
-            }
-            else {
-              throw new AlmaClientInvalidPatronError();
-            }
+          if ($method == 'patron/selfReg') {
+            throw new AlmaClientUserAlreadyExistsError();
+          }
+          else {
+            throw new AlmaClientInvalidPatronError();
+          }
 
           default:
-            throw new AlmaClientCommunicationError('Status is not okay: ' . $message);
+          throw new AlmaClientCommunicationError('Status is not okay: ' . $message);
         }
       }
     }
@@ -146,7 +154,7 @@ class AlmaClient {
       'securityNumber',
       'pin',
       'email',
-    );
+      );
 
     $log_params = array();
     foreach ($params as $key => $value) {
@@ -293,7 +301,7 @@ class AlmaClient {
       'mails' => array(),
       'phones' => array(),
       'category' => $info->getAttribute('patronCategory'),
-    );
+      );
 
     foreach ($info->getElementsByTagName('address') as $address) {
       $data['addresses'][] = array(
@@ -305,14 +313,14 @@ class AlmaClient {
         'postal_code' => $address->getAttribute('zipCode'),
         'city' => $address->getAttribute('city'),
         'country' => $address->getAttribute('country'),
-      );
+        );
     }
 
     foreach ($info->getElementsByTagName('emailAddress') as $mail) {
       $data['mails'][] = array(
         'id' => $mail->getAttribute('id'),
         'mail' => $mail->getAttribute('address'),
-      );
+        );
     }
 
     foreach ($info->getElementsByTagName('phoneNumber') as $phone) {
@@ -320,20 +328,20 @@ class AlmaClient {
         'id' => $phone->getAttribute('id'),
         'phone' => $phone->getAttribute('localCode'),
         'sms' => (bool) ($phone->getElementsByTagName('sms')->item(0)->getAttribute('useForSms') == 'yes'),
-      );
+        );
     }
 
     if ($prefs = $info->getElementsByTagName('patronPreferences')->item(0)) {
       $data['preferences'] = array(
         'patron_branch' => $prefs->getAttribute('patronBranch'),
-      );
+        );
     }
 
     foreach ($info->getElementsByTagName('patronBlock') as $block) {
       $data['blocks'][] = array(
         'code' => $block->getAttribute('code'),
         'is_system' => (bool) ($block->getElementsByTagName('isSystemBlock') == 'yes'),
-      );
+        );
     }
 
     foreach ($info->getElementsByTagName('absentPeriod') as $period) {
@@ -341,13 +349,13 @@ class AlmaClient {
         'id' => $period->getAttribute('absentId'),
         'from_date' => $period->getAttribute('absentFromDate'),
         'to_date' => $period->getAttribute('absentToDate'),
-      );
+        );
     }
 
     foreach ($info->getElementsByTagName('patronAllow') as $allow) {
       $data['allows'][$allow->getAttribute('allowType')] = array(
         'date' => $allow->getAttribute('allowDate'),
-      );
+        );
     }
 
     return $data;
@@ -372,7 +380,7 @@ class AlmaClient {
         'organisation_id' => $item->getAttribute('organisationId'),
         'record_id' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('id'),
         'record_available' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('isAvailable'),
-      );
+        );
 
       if ($note = $item->getElementsByTagName('note')->item(0)) {
         $reservation['notes'] = $note->getAttribute('value');
@@ -407,7 +415,7 @@ class AlmaClient {
       $loans[] = array(
         'id' => $item->getAttribute('id'),
         'loan_date' => strtotime($item->parentNode->getAttribute('loanDate'))
-      );
+        );
     }
 
     return $loans;
@@ -430,7 +438,7 @@ class AlmaClient {
         'is_renewable' => ($item->getElementsByTagName('loanIsRenewable')->item(0)->getAttribute('value') == 'yes') ? TRUE : FALSE,
         'record_id' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('id'),
         'record_available' => $item->getElementsByTagName('catalogueRecord')->item(0)->getAttribute('isAvailable'),
-      );
+        );
       if ($item->getElementsByTagName('note')->length > 0) {
         $loan['notes'] = $item->getElementsByTagName('note')->item(0)->getAttribute('value');
       }
@@ -457,7 +465,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'allowType' => $type,
-    );
+      );
 
     try {
       $doc = $this->request('patron/allow/add', $params);
@@ -489,7 +497,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'allowType' => $type,
-    );
+      );
 
     try {
       $doc = $this->request('patron/allow/remove', $params);
@@ -521,7 +529,7 @@ class AlmaClient {
     $data = array(
       'total_formatted' => 0,
       'debts' => array(),
-    );
+      );
 
     if ($debts_attr = $doc->getElementsByTagName('debts')->item(0)) {
       $data['total_formatted'] = $debts_attr->getAttribute('totalDebtAmountFormatted');
@@ -537,7 +545,7 @@ class AlmaClient {
         'amount_formatted' => $item->getAttribute('debtAmountFormatted'),
         'note' => $item->getAttribute('debtNote'),
         'display_name' => $item->getAttribute('debtNote'),
-      );
+        );
     }
     return $data;
   }
@@ -555,7 +563,7 @@ class AlmaClient {
       'reservationPickUpBranch' => $reservation['pickup_branch'],
       'reservationValidFrom' => $reservation['valid_from'],
       'reservationValidTo' => $reservation['valid_to'],
-    );
+      );
 
     // If there's not a validFrom date, set it as today.
     if (empty($params['reservationValidFrom'])) {
@@ -579,7 +587,7 @@ class AlmaClient {
           'alma_status' => ALMA_AUTH_BLOCKED,
           'res_status' => $res_status,
           'message' => $res_message
-        );
+          );
       }
 
       // General catchall if status is not okay is to report failure.
@@ -588,14 +596,14 @@ class AlmaClient {
           'alma_status' => ALMA_AUTH_BLOCKED,
           'res_status' => $res_status,
           'message' => $res_message
-        );
+          );
       }
     }
     catch (AlmaClientReservationNotFound $e) {
-        return array(
-          'alma_status' => ALMA_AUTH_BLOCKED,
-          'res_status' => $res_status,
-          'message' => $res_message
+      return array(
+        'alma_status' => ALMA_AUTH_BLOCKED,
+        'res_status' => $res_status,
+        'message' => $res_message
         );
     }
 
@@ -615,7 +623,7 @@ class AlmaClient {
       'reservationPickUpBranch' => $reservation['pickup_branch'],
       'reservationValidFrom' => $reservation['valid_from'],
       'reservationValidTo' => $reservation['valid_to'],
-    );
+      );
 
     // Then overwrite the values with those from the changes array.
     if (!empty($changes['pickup_branch'])) {
@@ -638,7 +646,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'reservation' => $reservation['id'],
-    );
+      );
 
     $doc = $this->request('patron/reservations/remove', $params);
     return TRUE;
@@ -652,7 +660,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'loans' => (is_array($loan_ids)) ? join(',', $loan_ids) : $loan_ids,
-    );
+      );
 
     $doc = $this->request('patron/loans/renew', $params);
 
@@ -699,7 +707,7 @@ class AlmaClient {
       'pinCode' => $pin_code,
       'localCode' => $new_number,
       'useForSms' => ($sms) ? 'yes' : 'no',
-    );
+      );
     $doc = $this->request('patron/phoneNumbers/add', $params);
     return TRUE;
   }
@@ -714,7 +722,7 @@ class AlmaClient {
       'phoneNumber' => $number_id,
       'localCode' => $new_number,
       'useForSms' => ($sms) ? 'yes' : 'no',
-    );
+      );
     $doc = $this->request('patron/phoneNumbers/change', $params);
     return TRUE;
   }
@@ -727,7 +735,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'phoneNumber' => $number_id,
-    );
+      );
     $doc = $this->request('patron/phoneNumbers/remove', $params);
     return TRUE;
   }
@@ -740,7 +748,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'address' => $new_email,
-    );
+      );
     $doc = $this->request('patron/email/add', $params);
     return TRUE;
   }
@@ -754,7 +762,7 @@ class AlmaClient {
       'pinCode' => $pin_code,
       'emailAddress' => $email_id,
       'address' => $new_email,
-    );
+      );
 
     $doc = $this->request('patron/email/change', $params);
     return TRUE;
@@ -768,7 +776,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'emailAddress' => $email_id,
-    );
+      );
     $doc = $this->request('patron/email/remove', $params);
     return TRUE;
   }
@@ -781,7 +789,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'pinCodeChange' => $new_pin,
-    );
+      );
     $doc = $this->request('patron/pinCode/change', $params);
     return TRUE;
   }
@@ -792,12 +800,12 @@ class AlmaClient {
   public function catalogue_record_detail($alma_ids) {
     $params = array(
       'catalogueRecordKey' => $alma_ids,
-    );
+      );
     $doc = $this->request('catalogue/detail', $params, FALSE);
     $data = array(
       'request_status' => $doc->getElementsByTagName('status')->item(0)->getAttribute('value'),
       'records' => array(),
-    );
+      );
 
     foreach ($doc->getElementsByTagName('detailCatalogueRecord') as $elem) {
       $record = AlmaClient::process_catalogue_record_details($elem);
@@ -827,7 +835,7 @@ class AlmaClient {
       'extent' => $elem->getAttribute('extent'),
       'edition' => $elem->getAttribute('edition'),
       'category' => $elem->getAttribute('category'),
-    );
+      );
 
     foreach ($elem->getElementsByTagName('author') as $item) {
       $record['authors'][] = $item->getAttribute('value');
@@ -876,7 +884,7 @@ class AlmaClient {
               'available_count' => 0,
               'branches' => array(),
               'reservable' => $holdings[0]['reservable'],
-            );
+              );
 
             // Also create an array with the totals for each issue.
             foreach ($holdings as $holding) {
@@ -923,7 +931,7 @@ class AlmaClient {
         'available_count' => (int) $item->getAttribute('nofAvailableForLoan'),
         'shelf_mark' => $item->getAttribute('shelfMark'),
         'available_from' => $item->getAttribute('firstLoanDueDate'),
-      );
+        );
     }
 
     return $holdings;
@@ -939,7 +947,7 @@ class AlmaClient {
       $data[$record->getAttribute('id')] = array(
         'reservable' => ($record->getAttribute('isReservable') == 'true') ? TRUE : FALSE,
         'available' => ($record->getAttribute('isAvailable') == 'yes') ? TRUE : FALSE,
-      );
+        );
     }
     return $data;
   }
@@ -974,7 +982,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'patronBranch' => $branch_code,
-    );
+      );
 
     $doc = $this->request('patron/preferences/change', $params);
     return TRUE;
@@ -999,7 +1007,7 @@ class AlmaClient {
       'pinCode' => $pin_code,
       'absentFromDate' => $from_date,
       'absentToDate' => $to_date,
-    );
+      );
 
     $doc = $this->request('patron/absentPeriod/add', $params);
     return TRUE;
@@ -1027,7 +1035,7 @@ class AlmaClient {
       'absentId' => $absent_id,
       'absentFrom' => date_format(date_create($from_date), ALMA_DATE),
       'absentTo' => date_format(date_create($to_date), ALMA_DATE),
-    );
+      );
 
     $doc = $this->request('patron/absent/change', $params);
     return TRUE;
@@ -1049,7 +1057,7 @@ class AlmaClient {
       'borrCard' => $borr_card,
       'pinCode' => $pin_code,
       'absentId' => $absent_id,
-    );
+      );
 
     $doc = $this->request('patron/absentPeriod/remove', $params);
     return TRUE;
@@ -1074,7 +1082,7 @@ class AlmaClient {
       'pinCode' => $pin_code,
       'sendMethod' => $method,
       'serviceType' => $type
-    );
+      );
 
     $doc = $this->request('patron/messageServices/add', $params);
     return TRUE;
@@ -1099,7 +1107,7 @@ class AlmaClient {
       'pinCode' => $pin_code,
       'sendMethod' => $method,
       'serviceType' => $type
-    );
+      );
 
     $doc = $this->request('patron/messageServices/remove', $params);
     return TRUE;
@@ -1137,7 +1145,7 @@ class AlmaClient {
       // and they are no good.
       'verified' => 'true',
       'locale' => 'da_DK'
-    );
+      );
 
     $this->request('patron/selfReg', $params);
     return TRUE;
