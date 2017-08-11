@@ -78,6 +78,20 @@ function ding_frontend_taxonomy_menu_content_type_render($subtype, $conf, $panel
   $terms = taxonomy_get_tree($vocab->vid);
 
   foreach ($terms as $term) {
+    
+    // Filter out empty terms
+    $query = new EntityFieldQuery;
+    $query->entityCondition('entity_type', 'node')
+    ->fieldCondition('field_ding_event_category', 'tid', $term->tid)
+    ->propertyCondition('status', NODE_PUBLISHED);
+    $result = $query->execute();
+
+    // Skip this term if there are no published nodes attached to it
+    if (!(isset($result['node']))) {
+      continue;
+    }
+
+
     // Try to find the correct uri based on the context/configuration.
     $alias = drupal_lookup_path('alias', 'taxonomy/term/' . $term->tid);
     $uri = drupal_get_path_alias($base . $conf['slug'] . '/' . $term->tid);
