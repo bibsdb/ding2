@@ -731,6 +731,64 @@ function _ding_user_update_old_accounts($hash) {
 }
 
 /**
+  * Copy whishlist items to new account
+  *
+  */
+function _ding_user_copy_whishlist_to_new_account($auth_name) {
+
+  // Try to find the users uid based on the new auth name 
+  // I assume that the first 50 characters of the old auth_name and the new auth_name are the same.
+  // The consequences if I am wrong:
+  // - some users don't get their bookmarks back
+  // - rare case - user get bookmarks not belonging to them
+
+  $auth_name_substring = substr($auth_name, 0, 50);
+  // Find the old uid based on part of the new auth name
+  $old_uid = db_select('authmap', 'a')
+  ->fields('a', array('uid'))
+  ->condition('authname', $auth_name_substring.'%', 'LIKE')
+  ->condition('authname', $auth_name, '<>')
+  ->execute()
+  ->fetchField();
+
+  // Find the new uid based on the new auth name
+  $new_uid = db_select('authmap', 'a')
+  ->fields('a', array('uid'))
+  ->condition('authname', $auth_name)
+  ->execute()
+  ->fetchField();
+
+  // Find the new bookmarks
+  $new_bookmarks = db_select('flag_content', 'fc')
+  ->fields('fc', array('content_id'))
+  ->condition('uid', $new_uid)
+  ->execute()
+  ->fetchCol();
+
+  // Find the old bookmarks
+  $old_bookmarks = db_select('flag_content', 'fc')
+  ->fields('fc', array('content_id'))
+  ->condition('uid', $old_uid)
+  ->execute()
+  ->fetchCol();
+
+
+  // Find the old bookmarks that do not exist in the new bookmarks
+  $old_bookmarks_not_in_new_bookmarks = array_diff($old_bookmarks, $new_bookmarks);
+
+      // Update the old bookmarks with the new uid
+  if(!(empty($old_bookmarks_not_in_new_bookmarks))) {
+    db_update('flag_content')
+    ->fields(array(
+      'uid' => $new_uid,
+      ))
+    ->condition('uid', $old_uid)
+    ->condition('content_id', $old_bookmarks_not_in_new_bookmarks, 'IN')
+    ->execute();
+  }  
+}
+
+/**
  * Custom validator for the login form.
  *
  * Handles authentication with provider, and setting up a profile2 for the
@@ -763,6 +821,10 @@ function ding_user_user_login_validate($form, &$form_state) {
 
       // Create new account in Drupal and if one exists update it.
       $account = _ding_user_create_account($auth_name, $auth_res);
+
+      // Bibsdb-fix. For some reasomn the old auth names made with PHP 5.5.9 are
+      // not caught by _ding_user_update_old_accounts. Hence this fix.
+      _ding_user_copy_whishlist_to_new_account($auth_name);
 
       // Check that a profile exists for the user and if not create one.
       _ding_user_create_profile2($account);
