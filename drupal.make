@@ -12,4 +12,4 @@ projects[drupal][patch][] = http://drupal.org/files/issues/translate_role_names-
 projects[ding2][type] = "profile"
 projects[ding2][download][type] = "git"
 projects[ding2][download][url] = "git@github.com:bibsdb/ding2.git"
-projects[ding2][download][tag] = "bibsdb-7.x-4.1.0"
+projects[ding2][download][branch] = "bibsdb-7.x-4.1.0"
