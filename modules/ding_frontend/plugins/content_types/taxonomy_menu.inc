@@ -80,17 +80,18 @@ function ding_frontend_taxonomy_menu_content_type_render($subtype, $conf, $panel
   foreach ($terms as $term) {
     
     foreach ($terms as $term) {
-    if ($conf['vocabulary'] == 'event_category') {
-      // Filter out empty terms
-      $query = new EntityFieldQuery;
-      $query->entityCondition('entity_type', 'node')
-      ->fieldCondition('field_ding_event_category', 'tid', $term->tid)
-      ->propertyCondition('status', NODE_PUBLISHED);
-      $result = $query->execute();
+      if ($conf['vocabulary'] == 'event_category') {
+        // Filter out empty terms
+        $query = new EntityFieldQuery;
+        $query->entityCondition('entity_type', 'node')
+        ->fieldCondition('field_ding_event_category', 'tid', $term->tid)
+        ->propertyCondition('status', NODE_PUBLISHED);
+        $result = $query->execute();
 
-      // Skip this term if there are no published nodes attached to it
-      if (!(isset($result['node']))) {
-        continue;
+        // Skip this term if there are no published nodes attached to it
+        if (!(isset($result['node']))) {
+          continue;
+        }
       }
     }
 
