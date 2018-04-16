@@ -3,7 +3,7 @@ api = 2
 
 ; Core
 projects[drupal][type] = core
-projects[drupal][version] = 7.56
+projects[drupal][version] = 7.58
 projects[drupal][patch][] = "http://drupal.org/files/issues/menu-get-item-rebuild-1232346-45.patch"
 projects[drupal][patch][] = "http://drupal.org/files/ssl-socket-transports-1879970-13.patch"
 projects[drupal][patch][] = "http://www.drupal.org/files/issues/1232416-autocomplete-for-drupal7x53.patch"
@@ -12,5 +12,5 @@ projects[drupal][patch][] = "http://drupal.org/files/issues/translate_role_names
 ; Get the profile, which will contain the next makefile.
 projects[ding2][type] = "profile"
 projects[ding2][download][type] = "git"
-projects[ding2][download][url] = "git@github.com:ding2/ding2.git"
-projects[ding2][download][branch] = "7.x-4.2.0"
+projects[ding2][download][url] = "git@github.com:bibsdb/ding2.git"
+projects[ding2][download][branch] = "ddbcms-7.x-4.2.0"
