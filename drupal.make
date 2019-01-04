@@ -14,5 +14,6 @@ projects[drupal][patch][] = "patches/drupal_core.robots.txt.ding2.patch"
 ; Get the profile, which will contain the next makefile.
 projects[ding2][type] = "profile"
 projects[ding2][download][type] = "git"
-projects[ding2][download][url] = "git@github.com:ding2/ding2.git"
-projects[ding2][download][branch] = "7.x-4.5.0"
+projects[ding2][download][url] = "git@github.com:bibsdb/ding2.git"
+projects[ding2][download][branch] = "bibsdb-7.x-4.5.0"
+
